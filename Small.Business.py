@@ -11,6 +11,7 @@ if "page" not in st.session_state:
 
 if "messages" not in st.session_state:
     st.session_state["messages"]= [
+        
         {
             "role": "assistant",
             "content": "Hi! How can I help you?"
@@ -20,32 +21,32 @@ if "messages" not in st.session_state:
 inventory = [
     {
         "id": 1,
-        "name": "Espresso",
-        "price": 2.5,
+        "name": "Bananas",
+        "price": 1.5,
         "stock": 41
     },
     {
         "id": 2,
-        "name": "Latte",
+        "name": "Milk",
         "price": 4.25,
         "stock": 25
     },
     {
         "id": 3,
-        "name": "Cold Brew",
-        "price": 3.75,
+        "name": "Eggs",
+        "price": 5.75,
         "stock": 20
     },
     {
         "id": 4,
-        "name": "Mocha",
-        "price": 4.5,
+        "name": "Bread",
+        "price": 3.5,
         "stock": 20
     },
     {
         "id": 5,
-        "name": "Blueberry Muffin",
-        "price": 2.95,
+        "name": "Meat",
+        "price": 12.95,
         "stock": 18
     }
 ]
@@ -73,7 +74,7 @@ else:
 
 
 if st.session_state["page"] == "home":
-    st.markdown(" # Orders Management Application - Home Page")
+    st.markdown(" # Grocery Store - Home Page")
     col1, col2 = st.columns([4,2])
     with col1:
         selected_category= st.radio("Select a List", ["Inventory", "Orders"], horizontal=True)
