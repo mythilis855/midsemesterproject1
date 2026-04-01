@@ -60,6 +60,11 @@ with st.sidebar:
     if st.button("Orders",key="orders_btn",type="primary", use_container_width=True):
         st.session_state["page"]= "orders"
         st.rerun()
+    
+    if st.button("Inventory",key="inventory_btn",type="primary",use_container_width=True):
+        st.session_state["page"]="inventory"
+        st.rerun()
+
 
 json_path_inventory = Path("inventory.json")
 if json_path_inventory.exists():
@@ -74,7 +79,7 @@ else:
 
 
 if st.session_state["page"] == "home":
-    st.markdown(" # Grocery Store - Home Page")
+    st.markdown(" # Mythili and Annette's Grocery Store : Home Page")
     col1, col2 = st.columns([4,2])
     with col1:
         selected_category= st.radio("Select a List", ["Inventory", "Orders"], horizontal=True)
@@ -178,5 +183,5 @@ elif st.session_state["page"] == "orders":
                     }
                 )
     with tab2: 
-        st.subheader("Cancel Order)") 
+        st.subheader("Cancel Order") 
 
