@@ -51,6 +51,12 @@ inventory = [
     }
 ]
 
+role = [
+    {
+        
+    }
+]
+
 with st.sidebar:
    
     if st.button("Home",key="home_btn",type="primary",use_container_width=True):
@@ -78,9 +84,9 @@ else:
     orders=[]
 
 
-if st.session_state["page"] == "home":
+if st.session_state["page"] == "inventory":
     st.markdown(" # Mythili and Annette's Grocery Store : Home Page")
-    col1, col2 = st.columns([4,2])
+    col1, col2,col3 = st.columns([3,3,3])
     with col1:
         selected_category= st.radio("Select a List", ["Inventory", "Orders"], horizontal=True)
         if selected_category == "Inventory":
@@ -118,16 +124,16 @@ elif st.session_state["page"] == "orders":
 
                 if st.button("Create Order", key="create_order_btn",type="primary",use_container_width=True):
                     with st.spinner("Creating the order ... "):
-                        total= quantity * selected_item["unit_price"]
+                        total= quantity * selected_item["price"]
                         for item in inventory:
-                            if item["item_id"]==selected_item["item_id"]:
+                            if item["id"]==selected_item["id"]:
                                 item["stock"]=item["stock"]- quantity 
                                 break
 
                         orders.append(
                             {
                                 "id": str(uuid.uuid4()),
-                                "item_id": selected_item["item_id"],
+                                "item_id": selected_item["id"],
                                 "quantity":quantity,
                                 "status": "placed",
                                 "total": total
@@ -139,7 +145,7 @@ elif st.session_state["page"] == "orders":
                         with open(json_path_orders, "w") as f:
                             json.dump(orders,f)
 
-                        st.baloons()
+                        st.balloons()
 
                         time.sleep(5)
                         st.session_state["page"] = "home"
