@@ -10,12 +10,14 @@ st.set_page_config(page_title= "Grocery Store Application",
                    layout="centered",
                    initial_sidebar_state="collapsed")
 
-st.title("Mythili and Annette's Grocery Store")
-st.header("Place an Order ")
-st.subheader("Course Assignment Manager")
-
 if "page" not in st.session_state:
     st.session_state["page"] = "home"
+
+if "role" not in st.session_state:
+    st.session_state["role"] = None
+
+if "logged_in" not in st.session_state:
+    st.session_state["logged_in"] = False
 
 if "messages" not in st.session_state:
     st.session_state["messages"]= [
@@ -26,151 +28,206 @@ if "messages" not in st.session_state:
         }
     ]
 
-inventory = [
-    {
-        "id": 1,
-        "name": "Bananas",
-        "price": 1.5,
-        "stock": 41
-    },
-    {
-        "id": 2,
-        "name": "Milk",
-        "price": 4.25,
-        "stock": 25
-    },
-    {
-        "id": 3,
-        "name": "Eggs",
-        "price": 5.75,
-        "stock": 20
-    },
-    {
-        "id": 4,
-        "name": "Bread",
-        "price": 3.5,
-        "stock": 20
-    },
-    {
-        "id": 5,
-        "name": "Meat",
-        "price": 12.95,
-        "stock": 18
-    }
-]
-
-
-users = [{
-    "id": "1",
-    "email": "admin@school.edu",
-    "full_name": "Joe Smith",
-    "password": "123A",
-    "role": "Employee",
-},
-{
-    "id": "2",
-    "email": "user@company.com",
-    "full_name": "Mary James",
-    "password": "456B",
-    "role": "User",   
-}]
-
-
-
-with st.sidebar:
-   
-    if st.button("Home",key="home_btn",type="primary",use_container_width=True):
-       st.session_state["page"]="home"
-       st.rerun()
-    
-    if st.button("Orders",key="orders_btn",type="primary", use_container_width=True):
-        st.session_state["page"]= "orders"
-        st.rerun()
-    
-    if st.button("Inventory",key="inventory_btn",type="primary",use_container_width=True):
-        st.session_state["page"]="inventory"
-        st.rerun()
-
+if not st.session_state["logged_in"]:
+    st.session_state["page"] = "home"
 
 json_path_inventory = Path("inventory.json")
+json_path_orders = Path("order.json")
+
+inventory = []
+orders = []
+
 if json_path_inventory.exists():
     with open(json_path_inventory, "r") as f:
         inventory = json.load(f)
-json_path_orders = Path("order.json")
+
 if json_path_orders.exists():
-    with open(json_path_orders,"r") as f:
+    with open(json_path_orders, "r") as f:
         orders = json.load(f)
-else:
-    orders=[]
 
+def go(page_name):
+    st.session_state["page"] = page_name
+    st.rerun()
 
-if st.session_state["page"] == "inventory":
-    st.markdown(" # Mythili and Annette's Grocery Store : Home Page")
-    col1, col2,col3 = st.columns([3,3,3])
-    with col1:
-        selected_category= st.radio("Select a List", ["Inventory", "Orders"], horizontal=True)
-        if selected_category == "Inventory":
-            if len(inventory)>0:
-                st.dataframe(inventory)
-            else: 
-                st.warning("No item in the inventory")
+def logout():
+    st.session_state["logged_in"] = False
+    st.session_state["role"] = None
+    st.session_state["page"] = "home"
+    st.rerun()
+
+with st.sidebar:
+
+    st.title("Navigation")
+
+    if st.button("Home"):
+        go("home")
+
+    if st.session_state["logged_in"]:
+
+        if st.session_state["role"] == "user":
+            if st.button("Orders"):
+                go("orders")
+
+        if st.session_state["role"] == "employee":
+            if st.button("Inventory"):
+                go("inventory")
+
+        st.divider()
+
+        if st.button("Log out"):
+            logout()
+
+if st.session_state["page"] == "home":
+
+    if st.session_state["logged_in"]:
+        if st.session_state["role"] == "employee":
+            go("inventory")
         else:
-            if len(orders)> 0:
+            go("orders")
+        st.stop()
+
+    st.markdown("# 🍎 New London Grocery Store")
+    st.markdown("Welcome! Please login or create an account below.")
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        with st.container(border=True):
+
+            st.subheader("Login")
+
+            with st.form("login_form", clear_on_submit=False):
+                username = st.text_input("Username")
+                password = st.text_input("Password", type="password")
+                role_guess = st.selectbox("Login as", ["user", "employee"])
+
+                submitted = st.form_submit_button("Login")
+
+            if submitted:
+
+                if username and password:
+
+                    # set session state
+                    st.session_state["logged_in"] = True
+                    st.session_state["role"] = role_guess
+
+                    # ROLE-BASED REDIRECT
+                    if role_guess == "employee":
+                        go("inventory")
+                    else:
+                        go("orders")
+
+                else:
+                    st.error("Please enter both username and password")
+
+    # =========================
+    # REGISTER BOX
+    # =========================
+    with col2:
+        with st.container(border=True):
+
+            st.subheader("Register")
+
+            with st.form("register_form", clear_on_submit=True):
+                email = st.text_input("Email")
+                name = st.text_input("Full Name")
+                password = st.text_input("Password", type="password")
+                role = st.selectbox("Role", ["user", "employee"])
+
+                created = st.form_submit_button("Create Account")
+
+            if created:
+                with st.spinner("Creating account..."):
+                    time.sleep(1)
+
+                st.success("Account created! Please login.")
+
+elif st.session_state["page"] == "inventory":
+    if st.session_state["role"] != "employee":
+        st.error("Access denied.")
+        st.stop()
+    st.markdown("# 📦 Inventory Dashboard")
+
+    col1, col2, col3 = st.columns([3, 3, 3])
+
+    with col1:
+        selected_category = st.radio(
+            "Select a List",
+            ["Inventory", "Orders"],
+            horizontal=True
+        )
+        if selected_category == "Inventory":
+            if inventory:
+                st.dataframe(inventory)
+            else:
+                st.warning("No items in inventory")
+        else:
+            if orders:
                 st.dataframe(orders)
             else:
-                st.warning("No order is recorded yet")
+                st.warning("No orders yet")
+
     with col2:
         if selected_category == "Inventory":
-            st.metric("Total Inventory", f"{len(inventory)}")
-            st.markdown("** Total Invetory")
-            st.divider()
+            st.metric("Total Inventory Items", len(inventory))
         else:
-            st.metric("Total Orders", f"{len(orders)}")
+            st.metric("Total Orders", len(orders))
 
 elif st.session_state["page"] == "orders":
+
+    if st.session_state["role"] != "user":
+        st.error("Access denied.")
+        st.stop()
+
+    st.markdown("# 🛒 Orders")
+
     tab1, tab2 = st.tabs(["Add New Order", "Cancel Order"])
+
     with tab1:
-        col1,col2= st.columns([3,3])
+            col1, col2 = st.columns([3, 3])
 
+            with col1: 
+                st.subheader("Add New Order")
 
-        with col1:
-            st.subheader("Add New Order")
-            with st.container(border= True): 
+                if inventory: 
+                    selected_item= st.selectbox("Items",options=inventory,
+                                        format_func= lambda x: f"{x["name"]}")
 
-                selected_item= st.selectbox("Items",options=inventory,
-                                        format_func= lambda x: f"{x["name"]}, Stock: {x["stock"]}")
+                    quantity = st.number_input("Quantity",min_value=1, step=1)
 
-                quantity = st.number_input("Quantity",min_value=1, step=1)
+                    if st.button("Create Order", key="create_order_btn",type="primary",use_container_width=True):
+                        with st.spinner("Creating the order ... "):
+                            total= quantity * selected_item["price"]
+                            for item in inventory:
+                                if item["id"]==selected_item["id"]:
+                                    item["stock"]=item["stock"]- quantity 
+                                    break
 
-                if st.button("Create Order", key="create_order_btn",type="primary",use_container_width=True):
-                    with st.spinner("Creating the order ... "):
-                        total= quantity * selected_item["price"]
-                        for item in inventory:
-                            if item["id"]==selected_item["id"]:
-                                item["stock"]=item["stock"]- quantity 
-                                break
-
-                        orders.append(
-                            {
-                                "id": str(uuid.uuid4()),
-                                "item_id": selected_item["id"],
-                                "quantity":quantity,
-                                "status": "placed",
-                                "total": total
-                            }
-                        )
+                            orders.append(
+                                {
+                                    "id": str(uuid.uuid4()),
+                                    "item_id": selected_item["id"],
+                                    "item_name": selected_item["name"],
+                                    "quantity": quantity,
+                                    "status": "active",   # 👈 important
+                                    "total": total,
+                                    "timestamp": str(datetime.now())
+                                }
+                            )
+                            
                         with open(json_path_inventory,"w") as f:
                             json.dump(inventory,f)
 
                         with open(json_path_orders, "w") as f:
                             json.dump(orders,f)
 
+                        st.success("Order created!")
                         st.balloons()
 
                         time.sleep(5)
                         st.session_state["page"] = "home"
     with col2:
-        st.subheader("Chatbot- Ai Assistant")
+        st.subheader("Chatbot - AI Assistant")
         col11,col22=st.columns([2,2])
         with col11:
             st.caption("Try Asking: How Can I Add a New Order?")
@@ -183,8 +240,6 @@ elif st.session_state["page"] == "orders":
             "content": "Hi! How can I help you?"
                         }
             ]
-
-
 
         with st.container(border=True, height=250):
             for message in st.session_state["messages"]:
@@ -210,4 +265,34 @@ elif st.session_state["page"] == "orders":
                 )
     with tab2: 
         st.subheader("Cancel Order") 
+        active_orders = [o for o in orders if o["status"] == "active"]
 
+        if not active_orders:
+            st.info("No active orders to cancel.")
+        else:
+
+            selected_order = st.selectbox(
+                "Select order to cancel",
+                options=active_orders,
+                format_func=lambda x: f"{x['item_name']} | Qty: {x['quantity']} | Total: ${x['total']}"
+            )
+
+            if st.button("Cancel Order", type="primary"):
+                
+                for order in orders:
+                    if order["id"] == selected_order["id"]:
+                        order["status"] = "cancelled"
+
+                for item in inventory:
+                    if item["id"] == selected_order["item_id"]:
+                        item["stock"] += selected_order["quantity"]
+                        break
+
+                with open(json_path_orders, "w") as f:
+                    json.dump(orders, f)
+
+                with open(json_path_inventory, "w") as f:
+                    json.dump(inventory, f)
+
+                st.success("Order cancelled successfully!")
+                st.rerun()
