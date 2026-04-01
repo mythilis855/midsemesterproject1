@@ -5,6 +5,14 @@ from datetime import datetime
 import uuid
 import time
 
+st.set_page_config(page_title= "Grocery Store Application",
+                   page_icon = "🍎",
+                   layout="centered",
+                   initial_sidebar_state="collapsed")
+
+st.title("Mythili and Annette's Grocery Store")
+st.header("Place an Order ")
+st.subheader("Course Assignment Manager")
 
 if "page" not in st.session_state:
     st.session_state["page"] = "home"
@@ -51,11 +59,23 @@ inventory = [
     }
 ]
 
-role = [
-    {
-        
-    }
-]
+
+users = [{
+    "id": "1",
+    "email": "admin@school.edu",
+    "full_name": "Joe Smith",
+    "password": "123A",
+    "role": "Employee",
+},
+{
+    "id": "2",
+    "email": "user@company.com",
+    "full_name": "Mary James",
+    "password": "456B",
+    "role": "User",   
+}]
+
+
 
 with st.sidebar:
    
